@@ -1,0 +1,15 @@
+#!/bin/bash
+
+
+# just rename the file or directory
+
+last=$1
+new=$2
+if [ -f $last -o -d $last ]; then
+	if mv $last $new; then
+		echo "Done! : rename $last to $new: "
+		ls -al | grep $new
+	fi
+else
+	printf "rename [ $last ] : No such file or directory\n"
+fi

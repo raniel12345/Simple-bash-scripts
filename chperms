@@ -1,0 +1,109 @@
+#!/bin/bash
+
+
+function make_executable(){
+	if [ -f $1 ]; then
+		sudo chmod +x $1
+		ls -la --color=auto | grep $1
+	fi
+
+	if [ -d $1 ]; then
+		sudo chmod -R +x $1
+		ls -la --color=auto $1
+	fi
+	exit 0
+}
+function make_readable(){
+	if [ -f $1 ]; then
+		sudo chmod +r $1
+		ls -la --color=auto | grep $1
+	fi
+
+	if [ -d $1 ]; then
+		sudo chmod -R +r $1
+		ls -la --color=auto $1
+	fi
+	exit 0
+}
+function make_writable(){
+	if [ -f $1 ]; then
+		sudo chmod +w $1
+		ls -la --color=auto | grep $1
+	fi
+	
+	if [ -d $1 ]; then
+		sudo chmod -R +w $1
+		ls -la --color=auto $1
+	fi
+	exit 0
+}
+function chpe_all_seven(){
+	if [ -f $1 ]; then
+		sudo chmod 777 $1
+		ls -la --color=auto | grep $1
+	fi
+
+	if [ -d $1 ]; then
+		sudo chmod -R 777 $1
+		ls -la --color=auto $1 
+	fi
+	exit 0
+}
+function chpe_seven_five_five(){
+	if [ -f $1 ]; then
+		sudo chmod 755 $1
+		ls -la --color=auto | grep $1
+	fi
+
+	if [ -d $1 ]; then
+		sudo chmod -R 755 $1
+		ls -la --color=auto $1
+	fi
+	exit 0
+}
+function chPermission(){
+	file_dir=$1
+	
+	echo "Script for Changing permission of files or directory"
+	echo "____________________________________________________"
+	echo "1 - Make Executable"
+	echo "2 - Make Readable"
+	echo "3 - Make Writable"
+	echo "4 - Change permission to 777"
+	echo "5 - Change permission to 755"
+
+	echo -e "\n#: \c"
+	read no
+
+	#start here
+	change $no $file_dir
+
+}
+function change(){
+	no=$1
+	file_dir=$2
+	case $no in
+		1) make_executable $file_dir ;;
+		2) make_readable $file_dir ;;
+		3) make_writable $file_dir ;;
+		4) chpe_all_seven $file_dir ;;
+		5) chpe_seven_five_five $file_dir ;;
+		*) 
+			echo "Invalid No"
+			tput clear
+			chPermission
+			exit 111
+		;;
+	esac
+}
+
+if [ $# -lt 1 ];then
+	echo "Missing one argument!!" 
+	exit 231
+else
+	if [ -f $1 -o -d $1 ]; then
+		chPermission $1
+	else
+	  	echo "$1 : No file or directory"        
+	fi
+fi

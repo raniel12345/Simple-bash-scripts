@@ -1,0 +1,15 @@
+#!/bin/bash
+
+
+function encrypt(){
+	if [ -s $1 ]; then
+		if sudo openssl aes-256-cbc -a -salt -in $1 -out $2; then
+			echo "Done!"
+			ls
+		fi
+	else
+		echo "Check the size of the file you want to encrypt"
+	fi
+}
+
+encrypt $1 $2

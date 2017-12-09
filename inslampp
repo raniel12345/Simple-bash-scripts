@@ -1,0 +1,238 @@
+#!/bin/bash
+
+
+function installApache(){
+	echo "Installing Apache2 (httpd)..."
+	# Installing Apache2 in rpm based distribution
+	if [ -d /etc/yum ]; then
+		if sudo yum -y install httpd ; then
+			echo "Done installing httpd"
+			sleep 2 # sleep 2 secs
+			echo "Starting httpd service..."
+			if sudo systemctl start httpd.service ; then
+				echo "Done"
+				echo -e "Enable httpd on boot? ( y or n): \c"
+				read yesno
+				case $yesno in
+					y) 
+						sudo systemctl enable httpd.service\
+						&& echo "Done: start to boot httpd."
+						sleep 2
+						;;
+					*) 
+						echo "OK" 
+						sleep 2
+						;;
+				esac
+			else
+				echo "Error: Starting httpd service"
+			fi
+		else	
+			echo "Error: installing httpd"
+			exit 1
+		fi
+	fi
+	
+	# Installing Apache2 in debian based distribution
+	if [ -d /etc/apt ]; then
+		if sudo apt-get -y install apache2 ; then
+			echo "Done installing apache2!!"
+			sleep 2
+		fi
+	fi
+
+}
+
+
+
+function installMySQL(){
+	# Debian distro
+	if [ -d /etc/apt ]; then
+		echo "Installing MySQL..."
+		echo "This task will be install mysql-server and php7.0-mysql"
+		sleep 3
+		if sudo apt-get -y install mysql-server ; then
+			echo "Done installing mysql-server"
+			if sudo apt-get -y install php7.0-mysql; then
+				echo "Done installing php7.0-mysql"
+				echo "Starting mysql_install_db....."
+				sleep 2
+				if sudo mysql_install_db; then
+					echo "Done"
+					echo "Starting mysql_secure_installation....."
+					sleep 2
+					if sudo /usr/bin/mysql_secure_installation; then
+						echo "Done installing MySQL"
+					fi
+				fi
+			else
+				echo "Error: installing php7.0-mysql"
+			fi
+		else
+			echo "Error: installing mysql-server"
+		fi
+	fi
+	# rpm distro
+	if [ -d /etc/yum ]; then
+		echo "Downloading and add the repository then update"
+		if wget http://repo.mysql.com/mysql-community-release-el7-5.noarch.rpm; then
+			echo "Downloaded!"
+			if sudo rpm -ivh mysql-community-release-el7-5.noarch.rpm; then
+				echo "Added repository"
+				echo "Updating..."
+				sleep 2
+				if sudo yum -y update; then
+					echo "Updated..."
+					echo "Installing MySQL..."
+					if sudo yum -y install mysql-community-server; then
+						echo "Done."
+						echo "Enabling MySQL on boot..."
+						if systemctl enable mysqld; then
+							echo "Done"
+							echo "Starting MySQL service"
+							if sudo systemctl start mysqld; then
+								echo "Done"
+								echo "Harden MySQL Server"
+								if sudo mysql_secure_installation; then
+									echo "Done"
+								fi
+							fi
+						fi
+					fi
+				fi
+			fi
+		fi
+	fi
+}
+function installMariaDB(){
+	echo "Installing MariaDB..."
+	# Install mariaDB on rpm base distro
+	if [ -d /etc/yum ]; then
+		if sudo yum -y install mariadb-server mariadb; then
+			echo "Done installing MariaDB"
+			sleep 2
+			echo "Starting MariaDB service..."
+			if sudo systemctl start mariadb; then
+				echo "Done"
+				echo "Starting mysql_secure_installation....."
+				sleep 3
+				if sudo mysql_secure_installation; then
+					echo "Done!"
+					echo -e "Enable mariadb on boot? (y or n): \c"
+					read yn
+					case $yn in
+						y)
+							if sudo systemctl enable mariadb.service; then
+								echo "Done"
+								sleep 2
+								echo "Installing php-mysql"
+								if sudo yum -y install php-mysql; then
+									echo "Done"
+									sleep 2
+								fi
+							else
+								echo "Error: enabling mariadb service on boot"		
+							fi
+							;;
+						*)
+							echo "OK"
+							sleep 2
+						;;
+					esac
+				fi
+			fi
+		else 
+			echo "Error: Installing MariaDB..."
+		fi
+	fi
+
+	# Debian base distro
+	if [ -d /etc/apt ] ; then
+		if sudo apt-get -y install mariadb-server; then
+			echo "Done installing MariaDB"
+			sleep 2
+			echo "Stoping MariaDB..."
+			if sudo service mysql stop; then
+				echo "Done."
+				sleep 1
+				echo "Configure and Secure MariaDB..."
+				echo "mysql_install_db..."
+				if sudo mysql_install_db; then
+					echo "Done"
+					echo "Starting MariaDB..."
+					if sudo service mysql start; then
+						echo "Done"
+						echo "mysql_secure_installation...."
+						if sudo mysql_secure_installation; then
+							echo "Done installing MariaDB!"
+						fi
+					fi
+				fi
+			fi
+		else
+			echo "Error: Installing MySQL..."
+		fi
+	fi
+}
+
+function installMySql_MariaDB(){
+	echo -e "Choose your Database server\n"
+	echo "	1 - MariaDB"
+	echo "	2 - MySQL"
+	echo -e "#: \c"
+	read db
+	
+	case $db in 
+		1) installMariaDB ;;
+		2) installMySQL ;;
+	esac
+}
+
+function installPHP(){
+	echo "Installing PHP....."
+	sleep 2
+	# rpm distro
+	if [ -d /etc/yum ]; then
+		if sudo yum -y install php; then
+			echo "Done installing php"
+			echo -e "Do you want to install phpmyadmin? (y or n): \c"
+			read yy
+
+			case $yy in
+				y) 
+					sudo yum -y install phpmyadmin
+					echo "Done"
+				;;
+				*) echo "OK";;
+			esac
+		else
+			echo "Error: installing php"
+		fi
+	fi
+
+	# debian distro
+	if [ -d /etc/apt ]; then
+		if sudo apt-get -y install php7.0; then
+			echo "Done installing php"
+			echo -e "Do you want to install phpmyadmin? (y or n): \c"
+			read yy
+
+			case $yy in
+				y) 
+					sudo apt-get -y install phpmyadmin
+					echo "Done"
+				;;
+				*) echo "OK";;
+			esac			
+		fi
+	fi
+}
+
+function buildLampp(){
+	installApache
+	installMySql_MariaDB
+	installPHP
+}
+
+# Start
+buildLampp

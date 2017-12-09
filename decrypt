@@ -1,0 +1,17 @@
+#!/bin/bash
+
+function decrypt(){
+	if [ -s $1 ]; then
+		if sudo openssl aes-256-cbc -d -a -salt -in $1 -out $2; then
+			echo "Done!"
+			ls
+		else
+			echo "Error!"
+		fi
+	else
+		echo "Check the size of the file you want to decrypt"
+	fi
+
+}
+
+decrypt $1 $2

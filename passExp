@@ -1,0 +1,119 @@
+#!/bin/bash
+
+
+
+function menu(){
+
+	echo "#####################################################################"
+	echo "	1 - List-"$1
+	echo "	2 - Set Password Expiry Date for $1"
+	echo "	3 - Set the Account Expiry Date for $1"
+	echo "	4 - Force the $1 account to be locked after # of inactivity days"
+	echo "	5 - Disable password aging for $1 account"
+	echo "	6 - Exit"
+	echo "#####################################################################"
+	echo -e "Enter you choice : \c"
+	read num
+
+	case $num in
+		1) list_expire $username;;
+		2)
+			echo -e "How many days? : \c"
+			read days
+			
+			if [ $days -gt 0 ]; then
+				pwdExpDate $days $username
+			else
+				echo "Days must be greater than 0"
+			fi
+		;;
+		3)
+			echo -e "Enter account expiry date: (YYYY-MM-DD): \c"
+			read accDate
+			
+			if [ "$accDate" != "" ]; then
+				accExpDate $accDate $username
+			else
+				echo "Please Enter the date"
+			fi
+		;;
+		4)
+			echo -e "Enter number of days before I locked the account: \c"
+			read days
+			
+			if [ $days -gt 0 ]; then
+				lockAcc $days $username
+			else
+				echo "Days must be greater than 0"
+			fi	
+		;;
+		5)
+			disable_pwd_aging $username
+		;;
+		6)
+			exit 0
+		;;
+		*)
+			exit 0
+		;;
+	esac
+
+}
+
+function list_expire(){
+	echo -e "\n"
+	if sudo chage --list $1; then
+		echo -e "\nChange password expiration(y or n): \c"
+		read ans
+
+		case $ans in
+			'y')
+				startHere
+				echo -e "\n\n"
+			;;
+			'*')
+				echo "Done!"
+				exit 0
+			;;
+		esac
+	else
+		exit 111	
+	fi
+}
+
+function pwdExpDate(){
+	if sudo chage -M $1 $2; then
+		echo -e 
+		sudo chage --list $2
+	fi
+}
+
+function accExpDate(){
+	sudo chage -E "$1" $2
+	sudo chage --list $2
+}
+
+function lockAcc(){
+	sudo chage -I $1 $2
+	sudo chage --list $2
+}
+
+function disable_pwd_aging(){
+	sudo chage -m 0 -M 99999 -I -1 -E -1 $1	
+	sudo chage --list $1
+}
+
+function startHere(){
+	tput clear
+	menu $1
+}
+
+if [ -z "$1" ]; then
+	echo "No argument supplied: username"
+
+else
+	username=$1
+	startHere $username
+fi
+
+
